@@ -7,6 +7,8 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
+var database *sql.DB
+
 func NewMySQL(cfg mysql.Config) (*sql.DB, error) {
 	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
@@ -16,8 +18,9 @@ func NewMySQL(cfg mysql.Config) (*sql.DB, error) {
 	return db, nil
 }
 
-func GetDB() *sql.DB {
-	db, err := NewMySQL(mysql.Config{
+func InitDB() {
+	var err error
+	database, err = NewMySQL(mysql.Config{
 		User:   "root",
 		Passwd: "root",
 		Addr:   "127.0.0.1:3306",
@@ -27,6 +30,8 @@ func GetDB() *sql.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
 
-	return db
+func GetDB() *sql.DB {
+	return database
 }

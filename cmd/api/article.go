@@ -47,6 +47,7 @@ func SetupRoutes(r *gin.Engine) {
 func getArticles(c *gin.Context) {
 	limitStr := c.DefaultQuery("limit", "10")
 	offsetStr := c.DefaultQuery("offset", "0")
+	status := c.DefaultQuery("status", "publish")
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
@@ -61,11 +62,24 @@ func getArticles(c *gin.Context) {
 	}
 
 	database := db.GetDB()
-	rows, err := database.Query("SELECT id, title, content, category, status FROM article LIMIT ? OFFSET ?", limit, offset)
+	rows, err := database.Query(`
+    SELECT id, title, content, category, status
+    FROM article
+    WHERE status = ?
+    LIMIT ? OFFSET ?`, status, limit, offset)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
+
+	var count int
+	err = database.QueryRow(`
+    SELECT COUNT(*)
+    FROM article
+    WHERE status = ?`, status).Scan(&count)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	var articles []Article
 	for rows.Next() {
@@ -78,7 +92,10 @@ func getArticles(c *gin.Context) {
 		articles = append(articles, article)
 	}
 
-	c.JSON(http.StatusOK, articles)
+	c.JSON(http.StatusOK, gin.H{
+		"count": count,
+		"data":  articles,
+	})
 }
 
 func getArticleByID(c *gin.Context) {

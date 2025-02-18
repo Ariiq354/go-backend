@@ -11,6 +11,8 @@ import (
 )
 
 func main() {
+	db.InitDB()
+
 	database := db.GetDB()
 
 	initStorage(database)
@@ -19,7 +21,7 @@ func main() {
 
 	api.SetupRoutes(r)
 
-	r.Run(":8080")
+	r.Run(":3001")
 }
 
 func initStorage(db *sql.DB) {
